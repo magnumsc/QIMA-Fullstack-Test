@@ -1,0 +1,91 @@
+package com.qima.fullstack.interview.demo.service;
+
+import com.qima.fullstack.interview.demo.dto.request.ProductRequestDTO;
+import com.qima.fullstack.interview.demo.dto.response.ProductResponseDTO;
+import com.qima.fullstack.interview.demo.model.ProductModel;
+import com.qima.fullstack.interview.demo.repository.CategoriesRepository;
+import com.qima.fullstack.interview.demo.repository.ProductsRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class ProductsService {
+    private final ProductsRepository productsRepository;
+    private final CategoriesRepository categoriesRepository;
+
+    public List<ProductResponseDTO> getFilteredProducts(Integer category) {
+        return productsRepository.findAllByCategory(category).stream()
+                .map(product -> new ProductResponseDTO(
+                        product.getId(),
+                        product.getName(),
+                        product.getDescription(),
+                        product.getPrice(),
+                        product.getImageUrl(),
+                        product.getCategoryPath(),
+                        product.getCategory().getName(),
+                        product.getCategory().getId(),
+                        product.getStock(),
+                        product.getAvailable() ? "yes" : "no"
+                )).collect(Collectors.toList());
+    }
+
+    public Boolean deleteProduct(Long id) {
+        var product = productsRepository.findById(id);
+        if (!product.isPresent()) {
+            throw new IllegalArgumentException("Product not found");
+        }
+        try {
+            productsRepository.delete(product.get());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Long addProduct(ProductRequestDTO productRequestDTO) {
+        var product = mapToProductModel(productRequestDTO, null);
+        product = productsRepository.save(product);
+        return product.getId();
+    }
+
+    public ProductResponseDTO saveProduct(ProductRequestDTO productRequestDTO) {
+        var product = productsRepository.findById(productRequestDTO.getId()).orElseThrow(
+                () -> new IllegalArgumentException("Product not found"));
+        product = mapToProductModel(productRequestDTO, product.getId());
+        product = productsRepository.save(product);
+        return mapToProductResponseDTO(product);
+    }
+
+    private ProductModel mapToProductModel(ProductRequestDTO productRequestDTO, Long id) {
+        var category = categoriesRepository.findById(productRequestDTO.getCategory()).orElse(null);
+        var product = new ProductModel();
+        product.setId(id);
+        product.setName(productRequestDTO.getName());
+        product.setDescription(productRequestDTO.getDescription());
+        product.setPrice(productRequestDTO.getPrice());
+        product.setImageUrl(productRequestDTO.getImageUrl());
+        product.setCategory(category);
+        product.setStock(productRequestDTO.getStockQuantity());
+        product.setAvailable(productRequestDTO.getAvailable());
+        return product;
+    }
+
+    private ProductResponseDTO mapToProductResponseDTO(ProductModel product) {
+        return new ProductResponseDTO(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getImageUrl(),
+                product.getCategoryPath(),
+                product.getCategory().getName(),
+                product.getCategory().getId(),
+                product.getStock(),
+                product.getAvailable() ? "yes" : "no"
+        );
+    }
+}

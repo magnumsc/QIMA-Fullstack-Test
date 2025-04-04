@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:script="http://www.w3.org/1999/html">
+<head>
+    <title>Add Product Modal</title>
+</head>
+<body>
+<div th:fragment="modal">
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Login</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="button" th:onClick="|login(this)|" class="btn btn-primary">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function login(button) {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            }).then(response => response.json()).then(data => {
+                if (!data.error) {
+                    setUser(data.username);
+                    location.reload();
+                } else {
+                    alert(`Login failed: ${data.error} - ${data.message}`);
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            $('#loginModal').on('hidden.bs.modal', function() {
+                document.getElementById('loginForm').reset();
+            });
+        });
+    </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:script="http://www.w3.org/1999/html">
+<head>
+    <title>Add Product Modal</title>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light" th:fragment="navbar">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Product App</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item dropdown" id="userMenu" style="display: none;">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <!-- Username will be inserted here -->
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#" id="logoutButton">Logout</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item" id="loginMenu">
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <script>
+        function setUser(username) {
+            document.getElementById('userDropdown').textContent = username;
+            document.getElementById('loginMenu').style.display = 'none';
+            document.getElementById('userMenu').style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const cookieName = 'magnific-auth';
+            const cookieValue = document.cookie.split('; ').find(row => row.startsWith(cookieName + '='));
+
+            if (cookieValue) {
+                setUser(cookieValue.split('=')[1].split(':')[0]);
+            }
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', function(event) {
+            event.preventDefault();
+            fetch('/auth/logout', {
+                method: 'POST'
+            }).then(response => {
+                if (response.ok) {
+                    // Handle successful logout
+                    document.getElementById('userDropdown').textContent = '';
+                    document.getElementById('loginMenu').style.display = 'block';
+                    document.getElementById('userMenu').style.display = 'none';
+                    document.cookie = 'magnific-auth=; Max-Age=0; path=/; secure; HttpOnly';
+                    location.reload();
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</nav>
+</body>
+</html>
