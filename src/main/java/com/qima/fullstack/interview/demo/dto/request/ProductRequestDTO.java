@@ -20,11 +20,11 @@ public class ProductRequestDTO {
     @Max(9999)
     private Long id;
 
-    @Pattern(regexp = "^[a-zA-Z0-9 ]{1,255}$", message = "Name can only contain letters, numbers and spaces")
+    @Pattern(regexp = "^[a-zA-Z0-9\\- ]{1,255}$", message = "Name can only contain letters, numbers and spaces")
     @Size(min = 1, max = 255, message = "Name must be between 1 and 255 characters")
     private String name;
 
-    @Pattern(regexp = "^[a-zA-Z0-9()\\. ]{0,255}$", message = "Description can only contain letters, numbers, parenthesis, dots and spaces")
+    @Pattern(regexp = "^[a-zA-Z0-9()\\.\\- ]{0,255}$", message = "Description can only contain letters, numbers, parenthesis, dots and spaces")
     @Size(min = 0, max = 255, message = "Description must be between 0 and 255 characters")
     private String description;
 
