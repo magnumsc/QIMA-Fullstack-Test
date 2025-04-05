@@ -142,6 +142,11 @@
                     if (data.id) {
                         $('#addProductModal').modal('hide');
                         reloadTable();
+                    } else {
+                        alert('Error adding product: ' + data.message);
+                        button.disabled = false;
+                        document.getElementById('close-modal-btn').disabled = false;
+                        button.innerHTML = 'Add Product';
                     }
                 })
                 .catch(error => {

@@ -48,7 +48,7 @@
     </tbody>
 </table>
 
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+<button th:if="${userIsAdmin}" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
     Add Product
 </button>
 <div th:replace="~{fragments/addProductModal :: modal}"></div>
