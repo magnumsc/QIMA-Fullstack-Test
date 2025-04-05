@@ -33,11 +33,9 @@ public class ProductsController {
     @GetMapping("/list")
     public String getListOfProducts(
             @AuthenticationPrincipal AuthPrincipal authPrincipal,
-            @Valid
-            ProductRequestDTO productRequestDTO,
             Model model
     ) {
-        List<ProductResponseDTO> products = productsService.getFilteredProducts(productRequestDTO.getCategory());
+        List<ProductResponseDTO> products = productsService.getAllProducts();
         model.addAttribute("products", products);
         model.addAttribute("userIsAdmin", authenticationService.hasRole(UserRoles.ADMIN, authPrincipal));
         return "products";

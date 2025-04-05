@@ -17,8 +17,8 @@ public class ProductsService {
     private final ProductsRepository productsRepository;
     private final CategoriesRepository categoriesRepository;
 
-    public List<ProductResponseDTO> getFilteredProducts(Integer category) {
-        return productsRepository.findAllByCategory(category).stream()
+    public List<ProductResponseDTO> getAllProducts() {
+        return productsRepository.findAll().stream()
                 .map(product -> new ProductResponseDTO(
                         product.getId(),
                         product.getName(),
@@ -26,16 +26,16 @@ public class ProductsService {
                         product.getPrice(),
                         product.getImageUrl(),
                         product.getCategoryPath(),
-                        product.getCategory().getName(),
-                        product.getCategory().getId(),
+                        product.getCategory() != null ? product.getCategory().getName() : null,
+                        product.getCategory() != null ? product.getCategory().getId() : null,
                         product.getStock(),
-                        product.getAvailable() ? "yes" : "no"
+                        Boolean.TRUE.equals(product.getAvailable()) ? "yes" : "no"
                 )).collect(Collectors.toList());
     }
 
     public Boolean deleteProduct(Long id) {
         var product = productsRepository.findById(id);
-        if (!product.isPresent()) {
+        if (product.isEmpty()) {
             throw new IllegalArgumentException("Product not found");
         }
         try {
@@ -82,10 +82,10 @@ public class ProductsService {
                 product.getPrice(),
                 product.getImageUrl(),
                 product.getCategoryPath(),
-                product.getCategory().getName(),
-                product.getCategory().getId(),
+                product.getCategory() != null ? product.getCategory().getName() : null,
+                product.getCategory() != null ? product.getCategory().getId() : null,
                 product.getStock(),
-                product.getAvailable() ? "yes" : "no"
+                Boolean.TRUE.equals(product.getAvailable()) ? "yes" : "no"
         );
     }
 }

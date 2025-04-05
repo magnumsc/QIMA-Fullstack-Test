@@ -19,8 +19,7 @@ public class CategoriesController {
     private final CategoriesService categoriesService;
 
     @GetMapping("/list")
-    public ResponseEntity<List<CategoryResponseDTO>> getListOfProducts() throws InterruptedException {
-        Thread.sleep(2000); // Simulate a delay
+    public ResponseEntity<List<CategoryResponseDTO>> getListOfProducts() {
         return ResponseEntity.ok(categoriesService.findAllCategories());
     }
 }

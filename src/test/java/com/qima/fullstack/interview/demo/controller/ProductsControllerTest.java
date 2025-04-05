@@ -1,0 +1,126 @@
+package com.qima.fullstack.interview.demo.controller;
+
+import com.qima.fullstack.interview.demo.config.dto.BadRequestDTO;
+import com.qima.fullstack.interview.demo.config.security.enums.UserRoles;
+import com.qima.fullstack.interview.demo.config.security.principal.AuthPrincipal;
+import com.qima.fullstack.interview.demo.config.security.service.AuthenticationService;
+import com.qima.fullstack.interview.demo.dto.request.ProductRequestDTO;
+import com.qima.fullstack.interview.demo.dto.response.NewProductResponseDTO;
+import com.qima.fullstack.interview.demo.dto.response.ProductResponseDTO;
+import com.qima.fullstack.interview.demo.service.ProductsService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class ProductsControllerTest {
+
+    @Mock
+    private ProductsService productsService;
+
+    @Mock
+    private AuthenticationService authenticationService;
+
+    @Mock
+    private Model model;
+
+    @Mock
+    private AuthPrincipal authPrincipal;
+
+    @InjectMocks
+    private ProductsController productsController;
+
+    @Test
+    @DisplayName("getListOfProducts returns products view with products and admin status")
+    void getListOfProductsReturnsProductsViewWithProductsAndAdminStatus() {
+        var product = new ProductResponseDTO();
+        product.setId(1L);
+        product.setName("Product 1");
+        when(productsService.getAllProducts()).thenReturn(List.of(product));
+        when(authenticationService.hasRole(UserRoles.ADMIN, authPrincipal)).thenReturn(true);
+
+        String viewName = productsController.getListOfProducts(authPrincipal, model);
+
+        assertEquals("products", viewName);
+        verify(model).addAttribute("products", List.of(product));
+        verify(model).addAttribute("userIsAdmin", true);
+    }
+
+    @Test
+    @DisplayName("deleteProduct returns OK when product is successfully deleted")
+    void deleteProductReturnsOKWhenProductIsSuccessfullyDeleted() {
+        when(productsService.deleteProduct(1L)).thenReturn(true);
+
+        ResponseEntity<Boolean> response = productsController.deleteProduct(1L);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody());
+    }
+
+    @Test
+    @DisplayName("deleteProduct returns Not Found when product is not found")
+    void deleteProductReturnsNotFoundWhenProductIsNotFound() {
+        when(productsService.deleteProduct(1L)).thenReturn(false);
+
+        ResponseEntity<Boolean> response = productsController.deleteProduct(1L);
+
+        assertEquals(404, response.getStatusCodeValue());
+    }
+
+    @Test
+    @DisplayName("deleteProduct returns Bad Request when exception is thrown")
+    void deleteProductReturnsBadRequestWhenExceptionIsThrown() {
+        when(productsService.deleteProduct(1L)).thenThrow(new IllegalArgumentException());
+
+        ResponseEntity<Boolean> response = productsController.deleteProduct(1L);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertFalse(response.getBody());
+    }
+
+    @Test
+    @DisplayName("addProduct returns new product ID when product is successfully added")
+    void addProductReturnsNewProductIdWhenProductIsSuccessfullyAdded() {
+        var productRequestDTO = new ProductRequestDTO();
+        when(productsService.addProduct(productRequestDTO)).thenReturn(1L);
+
+        ResponseEntity<NewProductResponseDTO> response = productsController.addProduct(productRequestDTO);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(1L, response.getBody().getId());
+    }
+
+    @Test
+    @DisplayName("saveProduct returns updated product ID when product is successfully saved")
+    void saveProductReturnsUpdatedProductIdWhenProductIsSuccessfullySaved() {
+        var productRequestDTO = new ProductRequestDTO();
+        when(productsService.saveProduct(productRequestDTO)).thenReturn(new ProductResponseDTO());
+
+        ResponseEntity<Object> response = productsController.saveProduct(productRequestDTO);
+
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    @Test
+    @DisplayName("saveProduct returns Bad Request when exception is thrown")
+    void saveProductReturnsBadRequestWhenExceptionIsThrown() {
+        var productRequestDTO = new ProductRequestDTO();
+        when(productsService.saveProduct(productRequestDTO)).thenThrow(new IllegalArgumentException());
+
+        ResponseEntity<Object> response = productsController.saveProduct(productRequestDTO);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertTrue(response.getBody() instanceof BadRequestDTO);
+    }
+}
