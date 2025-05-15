@@ -100,7 +100,7 @@
         }
         document.addEventListener('DOMContentLoaded', function() {
             let selectedCategory = undefined;
-            fetch('/categories/list')
+            fetch('/categories')
                 .then(response => response.json())
                 .then(categories => {
                     const categorySelect = document.getElementById('editProductCategory');
@@ -160,7 +160,7 @@
                 stockQuantity: document.getElementById('editProductStock').value
             };
 
-            fetch('/products/save', {
+            fetch('/products', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'

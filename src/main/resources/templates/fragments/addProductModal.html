@@ -63,7 +63,7 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            fetch('/categories/list')
+            fetch('/categories')
                 .then(response => response.json())
                 .then(categories => {
                     const categorySelect = document.getElementById('productCategory');
@@ -131,7 +131,7 @@
                 stockQuantity: document.getElementById('productStock').value
             };
 
-            fetch('/products/add', {
+            fetch('/products', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

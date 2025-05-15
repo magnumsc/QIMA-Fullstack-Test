@@ -2,47 +2,26 @@ package com.qima.fullstack.interview.demo.controller;
 
 import com.qima.fullstack.interview.demo.config.dto.BadRequestDTO;
 import com.qima.fullstack.interview.demo.config.security.annotations.IsAdmin;
-import com.qima.fullstack.interview.demo.config.security.enums.UserRoles;
-import com.qima.fullstack.interview.demo.config.security.principal.AuthPrincipal;
-import com.qima.fullstack.interview.demo.config.security.service.AuthenticationService;
 import com.qima.fullstack.interview.demo.dto.request.ProductRequestDTO;
 import com.qima.fullstack.interview.demo.dto.response.NewProductResponseDTO;
-import com.qima.fullstack.interview.demo.dto.response.ProductResponseDTO;
 import com.qima.fullstack.interview.demo.service.ProductsService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Validated
-@Controller
+@RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
 public class ProductsController {
     private final ProductsService productsService;
-    private final AuthenticationService authenticationService;
-
-    @GetMapping("/list")
-    public String getListOfProducts(
-            @AuthenticationPrincipal AuthPrincipal authPrincipal,
-            Model model
-    ) {
-        List<ProductResponseDTO> products = productsService.getAllProducts();
-        model.addAttribute("products", products);
-        model.addAttribute("userIsAdmin", authenticationService.hasRole(UserRoles.ADMIN, authPrincipal));
-        return "products";
-    }
 
     @IsAdmin
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Boolean> deleteProduct(
             @Min(1)
             @Max(9999)
@@ -61,7 +40,7 @@ public class ProductsController {
     }
 
     @IsAdmin
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<NewProductResponseDTO> addProduct(
             @Valid
             @RequestBody ProductRequestDTO productRequestDTO
@@ -71,7 +50,7 @@ public class ProductsController {
     }
 
     @IsAdmin
-    @PutMapping("/save")
+    @PutMapping
     public ResponseEntity<Object> saveProduct(
             @Valid
             @RequestBody ProductRequestDTO productRequestDTO
