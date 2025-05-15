@@ -26,7 +26,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="productPrice" class="form-label">Price</label>
-                            <input type="number" class="form-control" id="productPrice" name="price" required max="999999.00" min="1.00" step="0.01" oninvalid="setCustomValidity('Price must be a positive number with up to two decimal places.')" oninput="setCustomValidity(''); validateNumber(this);">
+                            <input type="number" class="form-control" id="productPrice" name="price" required max="999999.00" min="1.00" step="0.01" oninvalid="setCustomValidity('Price must be a positive number with up to two decimal places.')" oninput="setCustomValidity(''); validateAddNumber(this);">
                             <span class="validation-message" id="productPriceValidation"></span>
                         </div>
                         <div class="mb-3">
@@ -39,7 +39,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="productStock" class="form-label">Stock Quantity</label>
-                            <input type="number" class="form-control" id="productStock" name="stock" required max="99999" min="0" step="1" oninvalid="setCustomValidity('Stock quantity must be a non-negative integer.')" oninput="setCustomValidity(''); validateNumber(this, 0);">
+                            <input type="number" class="form-control" id="productStock" name="stock" required max="99999" min="0" step="1" oninvalid="setCustomValidity('Stock quantity must be a non-negative integer.')" oninput="setCustomValidity(''); validateAddNumber(this, 0);">
                             <span class="validation-message" id="productStockValidation"></span>
                         </div>
                         <div class="mb-3">
@@ -81,7 +81,7 @@
                     console.error('Error fetching categories:', error);
                 });
         });
-        function validateNumber(input, decimals = 2) {
+        function validateAddNumber(input, decimals = 2) {
             const max = parseFloat(input.max);
             const min = parseFloat(input.min);
             const value = parseFloat(input.value);
@@ -93,7 +93,7 @@
             }
             input.value = parseFloat(input.value).toFixed(decimals);
         }
-        function validateForm() {
+        function validateAddForm() {
             let isValid = true;
             const form = document.getElementById('addProductForm');
             const inputs = form.querySelectorAll('input, select');
@@ -113,7 +113,7 @@
             return isValid;
         }
         function addProduct(button) {
-            if (!validateForm()) {
+            if (!validateAddForm()) {
                 alert('Please fill in all required fields correctly.');
                 return;
             }
