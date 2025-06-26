@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:script="http://www.w3.org/1999/html">
+<head>
+    <title>Add Product Modal</title>
+</head>
+<body>
+<div th:fragment="modal">
+    <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" id="close-modal-btn" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editProductForm">
+                        <div class="mb-3">
+                            <label for="editProductId" class="form-label">Id</label>
+                            <input type="text" class="form-control" id="editProductId" name="id" required disabled>
+                            <span class="validation-message" id="editProductIdValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="editProductName" name="name" required pattern="^[a-zA-Z0-9\- ]{1,255}$" oninvalid="setCustomValidity('Only alphanumeric characters and spaces are allowed. Maximum length is 255 characters.')" oninput="setCustomValidity('')" maxlength="255">
+                            <span class="validation-message" id="editProductNameValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductDescription" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="editProductDescription" name="description" required pattern="^[a-zA-Z0-9\(\).\- ]{1,255}$" oninvalid="setCustomValidity('Only alphanumeric characters, parenthesis, dots and spaces are allowed. Maximum length is 255 characters.')" oninput="setCustomValidity('')" maxlength="255">
+                            <span class="validation-message" id="editProductDescriptionValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductPrice" class="form-label">Price</label>
+                            <input type="number" class="form-control" id="editProductPrice" name="price" required max="999999.00" min="1.00" step="0.01" oninvalid="setCustomValidity('Price must be a positive number with up to two decimal places.')" oninput="setCustomValidity(''); validateNumber(this);">
+                            <span class="validation-message" id="editProductPriceValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductCategory" class="form-label">Category</label>
+                            <select class="form-control" id="editProductCategory" name="category" required data-live-search="true" disabled>
+                                <!-- Options will be populated dynamically -->
+                                <option>Loading...</option>
+                            </select>
+                            <span class="validation-message" id="editProductCategoryValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductStock" class="form-label">Stock Quantity</label>
+                            <input type="number" class="form-control" id="editProductStock" name="stock" required max="99999" min="0" step="1" oninvalid="setCustomValidity('Stock quantity must be a non-negative integer.')" oninput="setCustomValidity(''); validateNumber(this, 0);">
+                            <span class="validation-message" id="editProductStockValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductAvailable" class="form-label">Available</label>
+                            <select class="form-control" id="editProductAvailable" name="available" required>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                            <span class="validation-message" id="editProductAvailableValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProductImageUrl" class="form-label">Image URL</label>
+                            <input type="text" class="form-control" id="editProductImageUrl" name="imageUrl" required pattern="^https?://.+\.(jpg|jpeg|png|gif)$" oninvalid="setCustomValidity('Please enter a valid image URL (e.g., http://example.com/image.jpg)')" oninput="setCustomValidity('')">
+                            <span class="validation-message" id="editProductImageUrlValidation"></span>
+                        </div>
+                        <button type="button" class="btn btn-primary" th:onClick="|saveProduct(this)|">Save Product</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function validateNumber(input, decimals = 2) {
+            const max = parseFloat(input.max);
+            const min = parseFloat(input.min);
+            const value = parseFloat(input.value);
+
+            if (value > max) {
+                input.value = max;
+            } else if (value < min) {
+                input.value = min;
+            }
+            input.value = parseFloat(input.value).toFixed(decimals);
+        }
+        function validateForm() {
+            let isValid = true;
+            const form = document.getElementById('editProductForm');
+            const inputs = form.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                const validationMessage = input.closest('.mb-3').querySelector('.validation-message');
+                if (!input.checkValidity()) {
+                    validationMessage.textContent = input.validationMessage;
+                    isValid = false;
+                    input.classList.add('is-invalid');
+                    input.classList.remove('is-valid');
+                } else {
+                    validationMessage.textContent = '';
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                }
+            });
+            return isValid;
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            let selectedCategory = undefined;
+            fetch('/categories')
+                .then(response => response.json())
+                .then(categories => {
+                    const categorySelect = document.getElementById('editProductCategory');
+                    categorySelect.innerHTML = '';
+                    categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.text = category.name;
+                        if (selectedCategory && category.id === Number(selectedCategory)) {
+                            option.selected = true;
+                        }
+                        categorySelect.appendChild(option);
+                    });
+                    categorySelect.disabled = false;
+                    $('#editProductCategory').selectpicker();
+                })
+                .catch(error => {
+                    console.error('Error fetching categories:', error);
+                });
+            const editProductModal = document.getElementById('editProductModal');
+            editProductModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                editProductModal.querySelector('#editProductId').value = button.getAttribute('data-id');
+                editProductModal.querySelector('#editProductName').value = button.getAttribute('data-name');
+                editProductModal.querySelector('#editProductDescription').value = button.getAttribute('data-description');
+                editProductModal.querySelector('#editProductPrice').value = button.getAttribute('data-price');
+                const category = editProductModal.querySelector('#editProductCategory');
+                if (category.options.length > 1) {
+                    category.value = button.getAttribute('data-category');
+                    $('#editProductCategory').selectpicker('refresh');
+                } else {
+                    selectedCategory = button.getAttribute('data-category');
+                }
+                editProductModal.querySelector('#editProductAvailable').value = button.getAttribute('data-available');
+                editProductModal.querySelector('#editProductImageUrl').value = button.getAttribute('data-image-url');
+                editProductModal.querySelector('#editProductStock').value = button.getAttribute('data-stock');
+            });
+        });
+        function saveProduct(button) {
+            if (!validateForm()) {
+                alert('Please fill in all required fields correctly.');
+                return;
+            }
+
+            button.disabled = true;
+            document.getElementById('close-modal-btn').disabled = true;
+            button.innerHTML = 'Saving...';
+
+            const product = {
+                id: document.getElementById('editProductId').value,
+                name: document.getElementById('editProductName').value,
+                description: document.getElementById('editProductDescription').value,
+                price: document.getElementById('editProductPrice').value,
+                category: document.getElementById('editProductCategory').value,
+                available: document.getElementById('editProductAvailable').value === 'yes',
+                imageUrl: document.getElementById('editProductImageUrl').value,
+                stockQuantity: document.getElementById('editProductStock').value
+            };
+
+            fetch('/products', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(product)
+            }).then(response => response.json()).then(data => {
+                if (data) {
+                    $('#editProductModal').modal('hide');
+                    reloadTable();
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</div>
+</body>
+</html>

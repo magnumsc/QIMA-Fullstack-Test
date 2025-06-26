@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Product List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.4/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css" rel="stylesheet">
+</head>
+<body>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+<div th:replace="~{fragments/loginModal :: modal}"></div>
+<h1>Product List</h1>
+<table id="productTable" class="table table-striped">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Price</th>
+        <th>Category</th>
+        <th>Available</th>
+        <th th:if="${userIsAdmin}">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="product : ${products}">
+        <th class="align-middle" th:text="${product.id}"></th>
+        <td class="align-middle">
+            <img th:src="${product.imageUrl}" alt="Product Image" style="max-width: 100px; max-height: 100px;">
+        </td>
+        <td class="align-middle" th:text="${product.name}"></td>
+        <td class="align-middle" th:text="${product.description}"></td>
+        <td class="align-middle" th:text="${product.price}"></td>
+        <td class="align-middle" th:text="${product.categoryPath}"></td>
+        <td class="align-middle" th:text="${product.available}"></td>
+        <td class="align-middle" th:if="${userIsAdmin}">
+            <button class="btn btn-warning btn-sm" title="edit" data-bs-toggle="modal" data-bs-target="#editProductModal"
+                    th:attr="data-id=${product.id}, data-name=${product.name}, data-description=${product.description}, data-price=${product.price}, data-category=${product.categoryId}, data-available=${product.available}, data-image-url=${product.imageUrl}, data-stock=${product.stockQuantity}">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" th:onClick="|deleteProduct(this, ${product.id})|" title="delete">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<button th:if="${userIsAdmin}" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+    Add Product
+</button>
+<div th:replace="~{fragments/addProductModal :: modal}"></div>
+<div th:replace="~{fragments/editProductModal :: modal}"></div>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.4/dist/js/bootstrap.bundle.min.js" integrity="sha384-YUe2LzesAfftltw+PEaao2tjU/QATaW/rOitAq67e0CT0Zi2VVRL0oC4+gAaeBKu" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@v1.14.0-beta2/dist/js/bootstrap-select.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        $('#productTable').DataTable({
+            pageLength: 10
+        });
+    });
+    function deleteProduct(button, productId) {
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+        fetch(`/products/${productId}`, {
+            method: 'DELETE'
+        }).then(response => response.json()).then(data => {
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-trash"></i>';
+            if (!data.error) {
+                const row = button.closest('tr');
+                const dataTable = $('#productTable').DataTable();
+                dataTable.row(row).remove().draw();
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            if (error.status === 403 || error.status === 401) {
+                alert('You do not have permission to delete this product.');
+            } else {
+                alert('An error occurred while deleting the product.');
+            }
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-trash"></i>';
+        });
+    }
+    function reloadTable() {
+        location.reload();
+    }
+</script>
+</body>
+</html>

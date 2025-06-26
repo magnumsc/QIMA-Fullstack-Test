@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:script="http://www.w3.org/1999/html">
+<head>
+    <title>Add Product Modal</title>
+</head>
+<body>
+<div th:fragment="modal">
+    <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" id="close-modal-btn" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProductForm">
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="productName" name="name" required pattern="^[a-zA-Z0-9\- ]{1,255}$" oninvalid="setCustomValidity('Only alphanumeric characters and spaces are allowed. Maximum length is 255 characters.')" oninput="setCustomValidity('')" maxlength="255">
+                            <span class="validation-message" id="productNameValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productDescription" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="productDescription" name="description" required pattern="^[a-zA-Z0-9\(\).\- ]{1,255}$" oninvalid="setCustomValidity('Only alphanumeric characters, parenthesis, dots and spaces are allowed. Maximum length is 255 characters.')" oninput="setCustomValidity('')" maxlength="255">
+                            <span class="validation-message" id="productDescriptionValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productPrice" class="form-label">Price</label>
+                            <input type="number" class="form-control" id="productPrice" name="price" required max="999999.00" min="1.00" step="0.01" oninvalid="setCustomValidity('Price must be a positive number with up to two decimal places.')" oninput="setCustomValidity(''); validateAddNumber(this);">
+                            <span class="validation-message" id="productPriceValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productCategory" class="form-label">Category</label>
+                            <select class="form-control" id="productCategory" name="category" required data-live-search="true" disabled>
+                                <!-- Options will be populated dynamically -->
+                                <option>Loading...</option>
+                            </select>
+                            <span class="validation-message" id="productCategoryValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productStock" class="form-label">Stock Quantity</label>
+                            <input type="number" class="form-control" id="productStock" name="stock" required max="99999" min="0" step="1" oninvalid="setCustomValidity('Stock quantity must be a non-negative integer.')" oninput="setCustomValidity(''); validateAddNumber(this, 0);">
+                            <span class="validation-message" id="productStockValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productAvailable" class="form-label">Available</label>
+                            <select class="form-control" id="productAvailable" name="available" required>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                            <span class="validation-message" id="productAvailableValidation"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productImageUrl" class="form-label">Image URL</label>
+                            <input type="text" class="form-control" id="productImageUrl" name="imageUrl" required pattern="^https?://.+\.(jpg|jpeg|png|gif)$" oninvalid="setCustomValidity('Please enter a valid image URL (e.g., http://example.com/image.jpg)')" oninput="setCustomValidity('')">
+                            <span class="validation-message" id="productImageUrlValidation"></span>
+                        </div>
+                        <button type="button" class="btn btn-primary" th:onClick="|addProduct(this)|">Add Product</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/categories')
+                .then(response => response.json())
+                .then(categories => {
+                    const categorySelect = document.getElementById('productCategory');
+                    categorySelect.innerHTML = '';
+                    categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.id;
+                        option.text = category.name;
+                        categorySelect.appendChild(option);
+                    });
+                    categorySelect.disabled = false;
+                    $('#productCategory').selectpicker();
+                })
+                .catch(error => {
+                    console.error('Error fetching categories:', error);
+                });
+        });
+        function validateAddNumber(input, decimals = 2) {
+            const max = parseFloat(input.max);
+            const min = parseFloat(input.min);
+            const value = parseFloat(input.value);
+
+            if (value > max) {
+                input.value = max;
+            } else if (value < min) {
+                input.value = min;
+            }
+            input.value = parseFloat(input.value).toFixed(decimals);
+        }
+        function validateAddForm() {
+            let isValid = true;
+            const form = document.getElementById('addProductForm');
+            const inputs = form.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                const validationMessage = input.closest('.mb-3').querySelector('.validation-message');
+                if (!input.checkValidity()) {
+                    validationMessage.textContent = input.validationMessage;
+                    isValid = false;
+                    input.classList.add('is-invalid');
+                    input.classList.remove('is-valid');
+                } else {
+                    validationMessage.textContent = '';
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                }
+            });
+            return isValid;
+        }
+        function addProduct(button) {
+            if (!validateAddForm()) {
+                alert('Please fill in all required fields correctly.');
+                return;
+            }
+            button.disabled = true;
+            document.getElementById('close-modal-btn').disabled = true;
+            button.innerHTML = 'Adding...';
+
+            const product = {
+                name: document.getElementById('productName').value,
+                description: document.getElementById('productDescription').value,
+                price: document.getElementById('productPrice').value,
+                category: document.getElementById('productCategory').value,
+                available: document.getElementById('productAvailable').value === 'yes',
+                imageUrl: document.getElementById('productImageUrl').value,
+                stockQuantity: document.getElementById('productStock').value
+            };
+
+            fetch('/products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(product)
+            }).then(response => response.json())
+                .then(data => {
+                    if (data.id) {
+                        $('#addProductModal').modal('hide');
+                        reloadTable();
+                    } else {
+                        alert('Error adding product: ' + data.message);
+                        button.disabled = false;
+                        document.getElementById('close-modal-btn').disabled = false;
+                        button.innerHTML = 'Add Product';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</div>
+</body>
+</html>
